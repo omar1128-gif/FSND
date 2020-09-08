@@ -80,18 +80,18 @@ def create_app(test_config=None):
 
             if question is None:
                 abort(404)
-            else:
-                question.delete()
 
-                selection = Question.query.order_by(Question.id).all()
-                current_questions = paginate_questions(request, selection)
+            question.delete()
 
-                return jsonify({
-                'success': True,
-                'deleted': question_id,
-                'books': current_questions,
-                'total_books': len(Question.query.all())
-                })
+            selection = Question.query.order_by(Question.id).all()
+            current_questions = paginate_questions(request, selection)
+
+            return jsonify({
+            'success': True,
+            'deleted': question_id,
+            'books': current_questions,
+            'total_books': len(Question.query.all())
+            })
         except:
             abort(422)
 
@@ -102,7 +102,7 @@ def create_app(test_config=None):
 
         body = request.get_json()
         if body is None:
-            abort(422)
+            abort(400)
         search_term = body.get('searchTerm', None)
         n_question = body.get('question', None)
         n_answer = body.get('answer', None)
@@ -150,20 +150,19 @@ def create_app(test_config=None):
 
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def show_questions_by_category(category_id):
-        try:
-            category_id = str(category_id)
-            questions = Question.query.filter(Question.category == category_id).all()
-            formated_questions = [question.format() for question in questions]
+        category_id = str(category_id)
+        questions = Question.query.filter(Question.category == category_id).all()
+        if len(questions) == 0:
+            abort(404)
+        formated_questions = [question.format() for question in questions]
 
-            return jsonify({
-            'success': True,
-            'questions': formated_questions,
-            'total_questions': len(questions),
-            'current_category': category_id
-            })
+        return jsonify({
+        'success': True,
+        'questions': formated_questions,
+        'total_questions': len(questions),
+        'current_category': category_id
+        })
 
-        except:
-            abort(422)
 
     @app.route('/quizzes', methods=['POST'])
     def get_quiz_questions():
@@ -182,24 +181,25 @@ def create_app(test_config=None):
                 questions = Question.query.all()
         else:
             if previous_questions:
-                questions = Question.query.filter(Question.category == category_id).filter(Question.id.notin_(previous_questions)).all()
+                questions = Question.query.filter(Question.id.notin_(previous_questions)).filter(Question.category == category_id).all()
             else:
                 questions = Question.query.filter(Question.category == category_id).all()
 
-        questions = [question.format() for question in questions]
         if len(questions) == 0:
-            abort(404)
+            return jsonify({
+            'success': True,
+            'question': False
+            })
+        else:
+            next_question = random.choice(questions).format()
 
-        next_question = random.choice(questions)
+            if next_question is None:
+                next_question = False
 
-        if next_question is None:
-            next_question = False
-            abort(404)
-
-        return jsonify({
-        'success': True,
-        'question': next_question
-        })
+            return jsonify({
+            'success': True,
+            'question': next_question
+            })
 
 
     @app.errorhandler(404)
@@ -233,7 +233,5 @@ def create_app(test_config=None):
         'error': 500,
         'message': 'internal server error'
         }),500
-
-
 
     return app

@@ -40,7 +40,7 @@ def get_token_auth_header():
 
     parts = auth.split()
 
-    if parts[0] != 'bearer':
+    if parts[0] != 'Bearer':
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Authorization header must start with "Bearer".'
@@ -53,7 +53,7 @@ def get_token_auth_header():
         }, 401)
     elif len(parts) > 2:
         raise AuthError({
-            'code': 'invalid_header'
+            'code': 'invalid_header',
             'description': 'Authorization header must be bearer token.'
         }, 401)
 
@@ -72,7 +72,7 @@ def get_token_auth_header():
     return true otherwise
 '''
 def check_permissions(permission, payload):
-    if permissions not in payload:
+    if 'permissions' not in payload:
         raise AuthError({
         'code': 'invalid_claims',
         'description': 'Permissions not included in JWT.'
@@ -173,8 +173,11 @@ def requires_auth(permission=''):
             try:
                 payload = verify_decode_jwt(token)
             except:
-                abort(401)
-            
+                raise AuthError({
+                'code': 'invalid_header',
+                'description': 'Unable to find the appropriate key.'
+                }, 401)
+
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
 

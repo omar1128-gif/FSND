@@ -49,8 +49,8 @@ def add_drink(jwt):
     if body is None:
         abort(400)
 
-    title = body.get('title')
-    recipe = body.get('recipe')
+    title = body.get('title', None)
+    recipe = body.get('recipe', None)
     try:
         if title and recipe:
             new_drink = Drink(title = title,
@@ -80,37 +80,21 @@ def update_drink(jwt, drink_id):
     body = dict(request.get_json())
     if body is None:
         abort(400)
-    title = body.get('title')
-    recipe = body.get('recipe')
+    title = body.get('title', None)
+    recipe = body.get('recipe', None)
     try:
-        if title and recipe:
+        if title:
             drink.title = title
+
+        if recipe:
             drink.recipe = json.dumps(recipe)
-            drink.update()
 
-            return jsonify({
-            "success": True,
-            "drink": [drink.long()]
-            })
+        drink.update()
 
-        elif title and (recipe is None):
-            drink.title = title
-            drink.update()
-
-            return jsonify({
-            "success": True,
-            "drink": [drink.long()]
-            })
-        elif recipe and (title is None):
-            drink.recipe = json.dumps(recipe)
-            drink.update()
-
-            return jsonify({
-            "success": True,
-            "drink": [drink.long()]
-            })
-        else:
-            abort(422)
+        return jsonify({
+        "success": True,
+        "drinks": [drink.long()]
+        })
     except:
         abort(422)
 

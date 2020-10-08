@@ -4,9 +4,11 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 
 
-database_name = "casting_agency"
-database_path = f"postgresql://omar@:5432/{database_name}"
 
+database_name = "casting_agency"
+database_path = f"postgresql://omar@:5432/{database_name}" # change the path according to your machine
+
+#database_url = os.environ.get('DATABASE_URL')
 
 db = SQLAlchemy()
 def setup_db(app, database_path=database_path):
